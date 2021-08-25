@@ -24,7 +24,7 @@ export class BlogService {
     }
 
     async createArticle(articleDto : ArticleDto) {
-        const article = await this.articlesRepository.create(articleDto);
+        const article = await this.articlesRepository.save(articleDto);
         return article;
     }
 
