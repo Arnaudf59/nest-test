@@ -1,0 +1,9 @@
+{
+    "type" : "mysql",
+    "username" : "root",
+    "password" : "",
+    "database" : "blog",
+    "synchronize" : true,
+    "logging" : true,
+    "entities" : ["src/**/**.entity.js"]
+}
