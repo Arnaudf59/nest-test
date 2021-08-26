@@ -335,3 +335,96 @@ async update(@Param('articleId') articleId, @Body() articleDto) {
     throw new HttpException('Article non modifié', HttpStatus.NOT_MODIFIED);
 }
 ```
+## Many-to-One and One-to-Many
+Commençons par créer une nouvelle entité.
+
+Commentaires :
+
+```ts
+@Entity('commentaire')
+export class  CommentaireEntity {
+    
+    @PrimaryGeneratedColumn({name : 'commentaire_id'})
+    id: number;
+
+    @Column({type : 'text'})
+    message : string;
+
+    @CreateDateColumn()
+    DateCreation : Date;
+}
+```
+Un commentaire et ratacher à un article, il faut donc rajouter une clé étrangère à la table commentaire
+
+Pour cela, dans le ``article.entity.ts`` mettre:
+```ts
+@OneToMany(type => CommentaireEntity, commentaire => commentaire.article)
+commentaires : CommentaireEntity[];
+```
+
+Et dans le fichier ``commentaire.entity.ts`` mettre:
+```ts
+@ManyToOne(type => ArticleEntity, article => article.commentaires)
+article : ArticleEntity;
+```
+
+Et l'on créait notre fichier ``commentaire.dto.ts``
+```ts
+export class CommentaireDto {
+    message : string;
+}
+```
+### Ajouter un commentaire
+
+Dans blog.service.ts créons la methode pour ajouter un commentaire
+
+Mais avant, il faut injecter notre commentaire.entity dans ``le constructor``
+```ts
+@InjectRepository(CommentaireEntity)
+private readonly CommentaireRepository : Repository<CommentaireEntity>
+```
+Dans **``blog.module``**, il faut indiqué que l'on va utiliser une autre entity
+```ts
+imports: [
+    TypeOrmModule.forFeature([ArticleEntity, CommentaireEntity])
+]
+```
+Maintenant, on peut créer notre méthode pour ajouter un commentaire
+```ts
+async addCommentaire(articleId, commentaireDto: CommentaireDto) {
+    const article = await this.articlesRepository.findOne(articleId, {relations: ['commentaires']});
+```
+on recupere notre article qui va être commenté
+
+``{relations: ['commentaires']}`` permet d'afficher les commentaire relier à l'article
+
+on créer une const commentaire qui contient les information de notre commentaire
+```ts
+async addCommentaire(articleId, commentaireDto: CommentaireDto) {
+    const article = await this.articlesRepository.findOne(articleId, {relations: ['commentaires']});
+    if(!article)
+        return null;
+    const comment = new CommentaireEntity();
+    comment.message = commentaireDto.message
+    comment.article = article;
+    return this.CommentaireRepository.save(comment);
+}
+```
+Dans le controller de notre blog, on peut créer notre methode **``POST``**
+```ts
+@Post('commentaire/:articleId')
+    async addCommentaire(@Param('articleId') articleId, @Body() commentaireDto: CommentaireDto) {
+        const commentaire = await this.blogService.addCommentaire(articleId, commentaireDto);
+        if(commentaire)
+            return commentaire;
+        throw new HttpException('Commentaire non ajouté', HttpStatus.NOT_MODIFIED);
+    }
+```
+### Modification de la méthode delete
+Comme l'on a rajouté une clé etrangère dans la table commentaire, il ne faut pas oublier de rajouter une option pour faire la suppression en cascade et permettre lors de la suppression d'un article, de supprimer les commentaire attaché a cette article
+Dans commentaire.entity.ts modifier le **``ManyToOne``** et rejouter l'option ``onDelete``
+
+```ts
+@ManyToOne(type => ArticleEntity, article => article.commentaires, {onDelete: 'CASCADE'})
+article : ArticleEntity;
+```

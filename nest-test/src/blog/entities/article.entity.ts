@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { CommentaireEntity } from "./commentaire.entity";
 
 @Entity('articles')
 export class ArticleEntity {
@@ -20,4 +21,7 @@ export class ArticleEntity {
 
     @Column({type : 'int', default : 0})
     likes: number;
+
+    @OneToMany(type => CommentaireEntity, commentaire => commentaire.article)
+    commentaires : CommentaireEntity[];
 }

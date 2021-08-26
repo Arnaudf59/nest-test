@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, Param, Patch, Post, Put } from '@nestjs/common';
 import { ArticleDto } from 'src/dtos/article.dto';
+import { CommentaireDto } from 'src/dtos/commentaire.dto';
 import { BlogService } from './blog.service';
 
 @Controller('blog')
@@ -49,5 +50,13 @@ export class BlogController {
             if(article)
                 return article;
             throw new HttpException('Article non trouvé', HttpStatus.NOT_FOUND);
+        }
+    
+    @Post('commentaire/:articleId')
+        async addCommentaire(@Param('articleId') articleId, @Body() commentaireDto: CommentaireDto) {
+            const commentaire = await this.blogService.addCommentaire(articleId, commentaireDto);
+            if(commentaire)
+                return commentaire;
+            throw new HttpException('Commentaire non ajouté', HttpStatus.NOT_MODIFIED);
         }
 }
