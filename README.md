@@ -428,3 +428,95 @@ Dans commentaire.entity.ts modifier le **``ManyToOne``** et rejouter l'option ``
 @ManyToOne(type => ArticleEntity, article => article.commentaires, {onDelete: 'CASCADE'})
 article : ArticleEntity;
 ```
+## ManyToMany
+
+``ManyToMany`` permet la création de table de liaison 
+
+Pour cela, il faut d'abord créer un ``tag.entity.ts`` pour créer une table tag
+```ts
+@Entity('tags')
+export class TagEntity {
+
+    @PrimaryGeneratedColumn({name: 'tag_id'})
+    id: number;
+
+    @Column()
+    name: string;
+}
+```
+et l'importer dans le ``blog.module.ts``
+```ts
+imports: [
+    TypeOrmModule.forFeature([ArticleEntity, CommentaireEntity, TagEntity])
+]
+```
+Pour créer un table de liaison, il faut la declarer dans les deux entités, ``article`` et ``tag``
+
+D'abord dans article
+```ts
+@ManyToMany(type => TagEntity)
+tags: TagEntity[];
+```
+Puis dans tag
+```ts
+@ManyToMany(type => ArticleEntity)
+articles: ArticleEntity[];
+```
+Ensuite, il faut créer la table de jointure dans le fichier qui est principale, dans notre cas, dans l'entité article
+```ts
+@ManyToMany(type => TagEntity)
+@JoinTable({name : 'articles_tags'})
+tags: TagEntity[];
+```
+Après la création de nos tables ``tags`` et ``articles_tags``, l'on peut créer nos requettes.
+
+D'abord, on va ajouter un tag, et pour cela ,il faut d'abord l'injecter dans le constructeur
+```ts
+@InjectRepository(TagEntity)
+private readonly TagsRepository : Repository<TagEntity>
+```
+puis on ajoute notre méthode d'ajout de tag
+```ts
+async addTag(name: string) {
+    let tag  = new TagEntity();
+    tag.name = name;
+    tag = await this.TagsRepository.save(tag);
+    if(tag)
+        return tag;
+    return null;
+}
+```
+puis on l'appel dans notre controller
+```ts
+@Post('tag/:tagName')
+    async addTag(@Param('tagName') tagName) {
+        const tag = await this.blogService.addTag(tagName);
+        if(tag)
+            return tag;
+        throw new HttpException('tag non ajouté', HttpStatus.NOT_MODIFIED);
+    }
+```
+Après avoir ajouter des tags, il nous reste à lié un tag à un article. d'abord dans le service:
+```ts
+async tagArticle(articleId, tagId) {
+    const article = await this.articlesRepository.findOne(articleId, {relations: ['tags']});
+    if(!article)
+        return null;
+    const tag = await this.TagsRepository.findOne(tagId);
+    if(!tag)
+        return null;
+    article.tags.push(tag);
+    await this.articlesRepository.save(article);
+    return this.articlesRepository.findOne(articleId, {relations: ['tags', 'commentaires']});
+}
+```
+Puis dans le controller pour l'envoyer dans la bdd
+```ts
+@Patch(':articleId/tag/:tagId')
+    async tagArticle(@Param('articleId') articleId: number, @Param('tagId') tagId: number) {
+        const article = await this.blogService.tagArticle(articleId, tagId);
+        if(article)
+            return article;
+        throw new HttpException('Non tagé', HttpStatus.NOT_MODIFIED);
+    }
+```

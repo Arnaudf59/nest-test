@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { CommentaireEntity } from "./commentaire.entity";
+import { TagEntity } from "./tag.entity";
 
 @Entity('articles')
 export class ArticleEntity {
@@ -24,4 +25,8 @@ export class ArticleEntity {
 
     @OneToMany(type => CommentaireEntity, commentaire => commentaire.article)
     commentaires : CommentaireEntity[];
+
+    @ManyToMany(type => TagEntity)
+    @JoinTable({name : 'articles_tags'})
+    tags: TagEntity[];
 }

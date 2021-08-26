@@ -5,6 +5,7 @@ import { CommentaireDto } from 'src/dtos/commentaire.dto';
 import { Repository } from 'typeorm';
 import { ArticleEntity } from './entities/article.entity';
 import { CommentaireEntity } from './entities/commentaire.entity';
+import { TagEntity } from './entities/tag.entity';
 
 @Injectable()
 export class BlogService {
@@ -13,7 +14,9 @@ export class BlogService {
         @InjectRepository(ArticleEntity)
         private readonly articlesRepository : Repository<ArticleEntity>,
         @InjectRepository(CommentaireEntity)
-        private readonly CommentaireRepository : Repository<CommentaireEntity>
+        private readonly CommentaireRepository : Repository<CommentaireEntity>,
+        @InjectRepository(TagEntity)
+        private readonly TagsRepository : Repository<TagEntity>
     ) {}
 
     getArticles() {
@@ -56,5 +59,26 @@ export class BlogService {
         comment.message = commentaireDto.message
         comment.article = article;
         return this.CommentaireRepository.save(comment);
+    }
+
+    async addTag(name: string) {
+        let tag  = new TagEntity();
+        tag.name = name;
+        tag = await this.TagsRepository.save(tag);
+        if(tag)
+            return tag;
+        return null;
+    }
+
+    async tagArticle(articleId, tagId) {
+        const article = await this.articlesRepository.findOne(articleId, {relations: ['tags']});
+        if(!article)
+            return null;
+        const tag = await this.TagsRepository.findOne(tagId);
+        if(!tag)
+            return null;
+        article.tags.push(tag);
+        await this.articlesRepository.save(article);
+        return this.articlesRepository.findOne(articleId, {relations: ['tags', 'commentaires']});
     }
 }

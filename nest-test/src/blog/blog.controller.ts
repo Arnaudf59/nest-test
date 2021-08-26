@@ -59,4 +59,20 @@ export class BlogController {
                 return commentaire;
             throw new HttpException('Commentaire non ajouté', HttpStatus.NOT_MODIFIED);
         }
+    
+    @Post('tag/:tagName')
+        async addTag(@Param('tagName') tagName) {
+            const tag = await this.blogService.addTag(tagName);
+            if(tag)
+                return tag;
+            throw new HttpException('tag non ajouté', HttpStatus.NOT_MODIFIED);
+        }
+    
+    @Patch(':articleId/tag/:tagId')
+    async tagArticle(@Param('articleId') articleId: number, @Param('tagId') tagId: number) {
+        const article = await this.blogService.tagArticle(articleId, tagId);
+        if(article)
+            return article;
+        throw new HttpException('Non tagé', HttpStatus.NOT_MODIFIED);
+    }
 }
