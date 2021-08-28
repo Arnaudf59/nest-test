@@ -1,6 +1,9 @@
 # nest-test
 
 Test de création de blog
+
+Bdd : ``SQL``
+Base de données: ``test_nestjs`` 
 ## Installation 
 
 dans le CMD, installer au global
