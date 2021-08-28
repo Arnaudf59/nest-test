@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { ApiOperation, ApiParam } from '@nestjs/swagger';
 import { ArticleDto } from 'src/dtos/article.dto';
 import { CommentaireDto } from 'src/dtos/commentaire.dto';
 import { BlogService } from './blog.service';
-
 @Controller('blog')
 export class BlogController {
     
@@ -11,14 +11,17 @@ export class BlogController {
     ){}
 
     @Get()
+    @ApiOperation({summary: 'Récupérer des articles'})
         getAll() {
             Logger.log('Récupérer tous les articles', 'BlogController');
             return this.blogService.getArticles();
         }
 
-    @Get(':articleId') 
+    @Get(':articleId')
+    @ApiParam({name: 'articleId'})
+    @ApiOperation({summary: 'Récupérer un article par id'})
         async getById(@Param('articleId') articleId) {
-            Logger.log('Récupére un article', 'BlogController');
+            Logger.log('Récupérer un article', 'BlogController');
             const article = await this.blogService.getArticleById(articleId);
             if(article)
                 return article;
@@ -35,6 +38,8 @@ export class BlogController {
         }
 
     @Put(':articleId')
+    @ApiParam({name: 'articleId'})
+    @ApiOperation({summary: 'Modifié un article'})
         async update(@Param('articleId') articleId, @Body() articleDto) {
             Logger.log('Modifier un article', 'BlogController');
             const article = await this.blogService.updateArticle(articleId, articleDto);
@@ -44,6 +49,8 @@ export class BlogController {
         }
 
     @Delete(':articleId')
+    @ApiParam({name: 'articleId'})
+    @ApiOperation({summary: 'Supprimer un article'})
         async remove(@Param('articleId') articleId) {
             Logger.log('Supprimer un article', 'BlogController');
             const article = await this.blogService.removeArticle(articleId);
@@ -53,6 +60,8 @@ export class BlogController {
         }
     
     @Post('commentaire/:articleId')
+    @ApiParam({name: 'articleId'})
+    @ApiOperation({summary: 'Enregistrer un commentaire'})
         async addCommentaire(@Param('articleId') articleId, @Body() commentaireDto: CommentaireDto) {
             const commentaire = await this.blogService.addCommentaire(articleId, commentaireDto);
             if(commentaire)
@@ -61,6 +70,8 @@ export class BlogController {
         }
     
     @Post('tag/:tagName')
+    @ApiParam({name: 'tagName'})
+    @ApiOperation({summary: 'Enregister un Tag'})
         async addTag(@Param('tagName') tagName) {
             const tag = await this.blogService.addTag(tagName);
             if(tag)
@@ -69,6 +80,9 @@ export class BlogController {
         }
     
     @Patch(':articleId/tag/:tagId')
+    @ApiParam({name: 'articleId'})
+    @ApiParam({name: 'tagId'})
+    @ApiOperation({summary: 'Associer un tag à un article'})
     async tagArticle(@Param('articleId') articleId: number, @Param('tagId') tagId: number) {
         const article = await this.blogService.tagArticle(articleId, tagId);
         if(article)
@@ -76,3 +90,4 @@ export class BlogController {
         throw new HttpException('Non tagé', HttpStatus.NOT_MODIFIED);
     }
 }
+

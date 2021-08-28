@@ -520,3 +520,58 @@ Puis dans le controller pour l'envoyer dans la bdd
         throw new HttpException('Non tagé', HttpStatus.NOT_MODIFIED);
     }
 ```
+## Swagger 
+installation:
+
+```shell
+npm i @nestjs/swagger swagger-ui-express
+```
+
+Ensuite dans ``main.ts`` rajouter le code de config
+```ts
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  const config = new DocumentBuilder()
+    .setTitle('Blog app')
+    .setDescription('Api Blog')
+    .setVersion('1.0')
+    .addTag('news')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
+  await app.listen(3000);
+}
+```
+Ensuite, il est possible d'y accéder sur l'URL: ``localhost:3000/api/``
+
+Toutes les requêtes sans parametre sont fonctionnelle. Par contre les requête avec des parametres ne fonctionne pas encore, pour ça, dans le controler il faut dire à swagger qu'il y a un parametre. Pour cela, il faut rajouter: 
+```ts
+@ApiParam({name: 'articleId'})
+```
+L'on peut aussi lui donner un titre avec :
+```ts
+@ApiOperation({summary: 'Récupéré un article par id'})
+```
+Au final cela nous donne:
+```ts
+@Get(':articleId')
+@ApiParam({name: 'articleId'})
+@ApiOperation({summary: 'Récupéré un article par id'})
+    async getById(@Param('articleId') articleId) {
+        Logger.log('Récupére un article', 'BlogController');
+        const article = await this.blogService.getArticleById(articleId);
+        if(article)
+            return article;
+        throw new HttpException('Article non trouvé', HttpStatus.NOT_FOUND);
+    }
+```
+Swagger permet aussi la visualisation des schema, pour cela il faut rajouter dans nos fichier dto : 
+```ts
+export class CommentaireDto {
+
+    @ApiProperty()
+    message : string;
+}
+```

@@ -20,7 +20,7 @@ export class BlogService {
     ) {}
 
     getArticles() {
-        return this.articlesRepository.find({relations : ['commentaires']})
+        return this.articlesRepository.find({relations : ['commentaires', 'tags']})
     }
 
     async getArticleById(articleId: number) {
